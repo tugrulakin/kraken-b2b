@@ -796,14 +796,20 @@ with ana_sekme1:
                                 f"🆔 <b>Sipariş No:</b> {yeni_id}\n\n"
                                 f"📦 <b>Sipariş İçeriği:</b>\n{siparis_detayi}"
                             )
-                            # Yanıtı alıp kontrol edelim
-                            response = requests.post(f"https://api.telegram.org/bot{telegram_token}/sendMessage", 
-                                          data={"chat_id": telegram_chat_id, "text": mesaj, "parse_mode": "HTML"})
+                            
+                            response = requests.post(
+                                f"https://api.telegram.org/bot{telegram_token}/sendMessage", 
+                                data={"chat_id": telegram_chat_id, "text": mesaj, "parse_mode": "HTML"},
+                                timeout=10  # Sunucuya "10 saniye bekle, acele etme" diyoruz!
+                            )
                             
                             if response.status_code != 200:
-                                st.error(f"Telegram API Hatası: {response.text}")
+                                st.error(f"TELEGRAM GÖNDERİLEMEDİ! Hata Kodu: {response.text}")
+                                st.stop() # Sayfayı dondurur, hatayı yakalarız
+                                
                         except Exception as e:
-                            st.error(f"Kod Hatası: {str(e)}")
+                            st.error(f"TELEGRAM KOD HATASI: {str(e)}")
+                            st.stop()
 
                     # ----------------------------------------------------
 
