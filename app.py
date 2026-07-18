@@ -87,17 +87,21 @@ def st_zırhlı_detay_goster(detay_df):
 # Hatalı Kütüphane Formatını Ezip Ham Veri Çeken Özel Fonksiyon
 @st.cache_data(ttl=300) # 🌟 VERİLERİ 5 DAKİKA HAFIZAYA ALIR (429 Hatasını Önler)
 def get_records_cached(_sheet, sheet_title):
-    raw = _sheet.get_all_values()
-    if len(raw) > 1:
-        headers = raw[0]
-        num_cols = len(headers)
-        records = []
-        for row in raw[1:]:
-            # Satır kısa kaldıysa boşlukla tamamla
-            padded_row = row + [""] * (num_cols - len(row))
-            records.append(dict(zip(headers, padded_row)))
-        return records
-    return []
+    try:
+        raw = _sheet.get_all_values()
+        if len(raw) > 1:
+            headers = raw[0]
+            num_cols = len(headers)
+            records = []
+            for row in raw[1:]:
+                padded_row = row + [""] * (num_cols - len(row))
+                records.append(dict(zip(headers, padded_row)))
+            return records
+        return []
+    except Exception as e:
+        # EĞER GOOGLE HIZ SINIRINA TAKILIRSAK HAFIZAYA BOŞ LİSTE KAYDETME!
+        st.error(f"Google bağlantı hatası: {e}. Lütfen sayfayı yenileyin.")
+        st.stop()
 
 def get_records_raw(sheet):
     # Eski kodlarının hiçbirini değiştirmene gerek kalmaması için köprü görevi görür
@@ -747,90 +751,90 @@ with ana_sekme1:
                 taslak_basildi = st.button("💾 Taslak Olarak Kaydet", type="secondary", use_container_width=True)
                 
             if gonder_basildi or taslak_basildi:
-                durum_degeri = "Gonderis" if gonder_basildi else "Gonderilmemis"
-                status_mesaj = "siparişiniz başarıyla merkeze iletildi!" if gonder_basildi else "siparişiniz taslak olarak kaydedildi!"
-                
-                siparis_kayit_df = liste_df[[
-                    "Ürün Kodu", "Kategori", "Alt Kategori", "Miktar", "Ürün Adı", 
-                    "Açıklama", "Gizli_Birim_Fiyat", "Saf_KDV"
-                ]]
-                detay_json_str = json.dumps(siparis_kayit_df.to_dict(orient="records"), ensure_ascii=False)
-                
-                if siparisler_df.empty:
-                    yeni_id = "KRAKEN-1001"
-                else:
-                    try:
-                        son_id = str(siparisler_df.iloc[-1]["Siparis_ID"])
-                        son_numara = int(son_id.split("-")[1])
-                        yeni_id = f"KRAKEN-{son_numara + 1}"
-                    except:
-                        yeni_id = f"KRAKEN-{1000 + len(siparisler_df) + 1}"
-                        
-                tarih_str = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M")
-                
-                try:
-                    tablo_siparisler.append_row([
-                        yeni_id, 
-                        tarih_str, 
-                        st.session_state.kullanici_adi, 
-                        st.session_state.secilen_yat, 
-                        detay_json_str, 
-                        float(genel_toplam), 
-                        durum_degeri
-                    ])
-
-                    # --- TELEGRAM ---
-                    if gonder_basildi: 
+                with st.spinner("Siparişiniz merkeze iletiliyor, lütfen bekleyin..."): # BUTONA BASILDIĞINI GÖSTERİR
+                    durum_degeri = "Gonderis" if gonder_basildi else "Gonderilmemis"
+                    status_mesaj = "siparişiniz başarıyla merkeze iletildi!" if gonder_basildi else "siparişiniz taslak olarak kaydedildi!"
+                    
+                    siparis_kayit_df = liste_df[[
+                        "Ürün Kodu", "Kategori", "Alt Kategori", "Miktar", "Ürün Adı", 
+                        "Açıklama", "Gizli_Birim_Fiyat", "Saf_KDV"
+                    ]]
+                    detay_json_str = json.dumps(siparis_kayit_df.to_dict(orient="records"), ensure_ascii=False)
+                    
+                    if siparisler_df.empty:
+                        yeni_id = "KRAKEN-1001"
+                    else:
                         try:
-                            import requests
-                            telegram_token = "8999770908:AAEGuzHWxTjeuos_0MwpCa5GTuJGhoG5xCw"
-                            telegram_chat_id = "-1004481254642"
+                            son_id = str(siparisler_df.iloc[-1]["Siparis_ID"])
+                            son_numara = int(son_id.split("-")[1])
+                            yeni_id = f"KRAKEN-{son_numara + 1}"
+                        except:
+                            yeni_id = f"KRAKEN-{1000 + len(siparisler_df) + 1}"
                             
-                            siparis_detayi = ""
-                            for urun_kodu in st.session_state.sepet:
-                                urun_adi = orijinal_df.loc[orijinal_df["Ürün Kodu"] == urun_kodu, "Ürün Adı"].values[0]
-                                # Telegram HTML formatında '&', '<', '>' gibi karakterleri görünce hata verir. Temizliyoruz:
-                                urun_adi = str(urun_adi).replace("&", "ve").replace("<", "").replace(">", "")
-                                siparis_detayi += f"▪️ {urun_adi} ({st.session_state.sepet[urun_kodu]} adet)\n"
+                    tarih_str = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M")
+                    
+                    try:
+                        tablo_siparisler.append_row([
+                            yeni_id, 
+                            tarih_str, 
+                            st.session_state.kullanici_adi, 
+                            st.session_state.secilen_yat, 
+                            detay_json_str, 
+                            float(genel_toplam), 
+                            durum_degeri
+                        ])
+
+                        # --- TELEGRAM ---
+                        if gonder_basildi: 
+                            try:
+                                import requests
+                                telegram_token = "8999770908:AAEGuzHWxTjeuos_0MwpCa5GTuJGhoG5xCw"
+                                telegram_chat_id = "-1004481254642"
                                 
-                            # Müşteri veya Yat isminde de ampersand (&) vs. varsa patlamaması için güvenceye alalım:
-                            guvenli_isim = str(st.session_state.gercek_isim).replace("&", "ve").replace("<", "").replace(">", "")
-                            guvenli_yat = str(st.session_state.secilen_yat).replace("&", "ve").replace("<", "").replace(">", "")
-                            
-                            mesaj = (
-                                f"🚨 <b>YENİ SİPARİŞ GELDİ!</b>\n\n"
-                                f"👤 <b>Müşteri:</b> {guvenli_isim}\n"
-                                f"🛥️ <b>Yat:</b> {guvenli_yat}\n"
-                                f"🆔 <b>Sipariş No:</b> {yeni_id}\n\n"
-                                f"📦 <b>Sipariş İçeriği:</b>\n{siparis_detayi}"
-                            )
-                            
-                            response = requests.post(
-                                f"https://api.telegram.org/bot{telegram_token}/sendMessage", 
-                                data={"chat_id": telegram_chat_id, "text": mesaj, "parse_mode": "HTML"},
-                                timeout=10  # Sunucuya "10 saniye bekle, acele etme" diyoruz!
-                            )
-                            
-                            if response.status_code != 200:
-                                st.error(f"TELEGRAM GÖNDERİLEMEDİ! Hata Kodu: {response.text}")
-                                st.stop() # Sayfayı dondurur, hatayı okumamızı sağlar
+                                siparis_detayi = ""
+                                for urun_kodu in st.session_state.sepet:
+                                    urun_adi = orijinal_df.loc[orijinal_df["Ürün Kodu"] == urun_kodu, "Ürün Adı"].values[0]
+                                    urun_adi = str(urun_adi).replace("&", "ve").replace("<", "").replace(">", "")
+                                    siparis_detayi += f"▪️ {urun_adi} ({st.session_state.sepet[urun_kodu]} adet)\n"
+                                    
+                                guvenli_isim = str(st.session_state.gercek_isim).replace("&", "ve").replace("<", "").replace(">", "")
+                                guvenli_yat = str(st.session_state.secilen_yat).replace("&", "ve").replace("<", "").replace(">", "")
                                 
-                        except Exception as e:
-                            st.error(f"TELEGRAM KOD HATASI: {str(e)}")
-                            st.stop()
+                                mesaj = (
+                                    f"🚨 <b>YENİ SİPARİŞ GELDİ!</b>\n\n"
+                                    f"👤 <b>Müşteri:</b> {guvenli_isim}\n"
+                                    f"🛥️ <b>Yat:</b> {guvenli_yat}\n"
+                                    f"🆔 <b>Sipariş No:</b> {yeni_id}\n\n"
+                                    f"📦 <b>Sipariş İçeriği:</b>\n{siparis_detayi}"
+                                )
+                                
+                                response = requests.post(
+                                    f"https://api.telegram.org/bot{telegram_token}/sendMessage", 
+                                    data={"chat_id": telegram_chat_id, "text": mesaj, "parse_mode": "HTML"},
+                                    timeout=10
+                                )
+                                
+                                if response.status_code != 200:
+                                    st.error(f"TELEGRAM GÖNDERİLEMEDİ! Hata Kodu: {response.text}")
+                                    st.stop() 
+                                    
+                            except Exception as e:
+                                st.error(f"TELEGRAM KOD HATASI: {str(e)}")
+                                st.stop()
+                        # ----------------------------------------------------
 
-                    # ----------------------------------------------------
+                        st.cache_data.clear() 
+                        st.success(f"Tebrikler! {yeni_id} nolu {status_mesaj}")
+                        st.session_state.liste_onaylandi = False
+                        st.session_state.sepet = {}
+                        st.session_state.editor_key += 1
+                        time.sleep(1.5)
+                        st.rerun()
 
-                    st.cache_data.clear() # 🌟 SİPARİŞ VERİLİNCE HAFIZAYI TEMİZLE Kİ TABLO GÜNCELLENSİN
-                    st.success(f"Tebrikler! {yeni_id} nolu {status_mesaj}")
-                    st.session_state.liste_onaylandi = False
-                    st.session_state.sepet = {}
-                    st.session_state.editor_key += 1
-                    time.sleep(1.5)
-                    st.rerun()
-
-                except Exception as e:
-                    st.error(f"Sipariş kaydı sırasında hata oluştu: {e}")
+                    except Exception as e:
+                        st.error(f"🚨 GOOGLE SHEETS SİPARİŞİ KAYDEDEMEDİ! Hata: {e}")
+                        st.info("Eğer hata metninde 'Quota exceeded' (Limit aşıldı) yazıyorsa, lütfen 1 dakika bekleyip butona tekrar basın.")
+                        st.stop() # HATA VARSA SAYFAYI ZORLA DONDURUR
         else:
             st.warning("Listenizde miktar girişi yapılmış herhangi bir ürün bulunamadı.")
 
