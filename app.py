@@ -87,7 +87,6 @@ def st_zırhlı_detay_goster(detay_df):
 # Hatalı Kütüphane Formatını Ezip Ham Veri Çeken Özel Fonksiyon
 @st.cache_data(ttl=300) # 🌟 VERİLERİ 5 DAKİKA HAFIZAYA ALIR (429 Hatasını Önler)
 def get_records_cached(_sheet, sheet_title):
-    # DİKKAT: Hataları yutup boş liste kaydeden try-except bloğu kaldırıldı!
     raw = _sheet.get_all_values()
     if len(raw) > 1:
         headers = raw[0]
