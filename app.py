@@ -85,9 +85,10 @@ def st_zırhlı_detay_goster(detay_df):
 # ------------------------    
 
 # Hatalı Kütüphane Formatını Ezip Ham Veri Çeken Özel Fonksiyon
-def get_records_raw(sheet):
+@st.cache_data(ttl=300) # 🌟 VERİLERİ 5 DAKİKA HAFIZAYA ALIR (429 Hatasını Önler)
+def get_records_cached(_sheet, sheet_title):
     try:
-        raw = sheet.get_all_values()
+        raw = _sheet.get_all_values()
         if len(raw) > 1:
             headers = raw[0]
             num_cols = len(headers)
@@ -100,6 +101,10 @@ def get_records_raw(sheet):
         return []
     except:
         return []
+
+def get_records_raw(sheet):
+    # Eski kodlarının hiçbirini değiştirmene gerek kalmaması için köprü görevi görür
+    return get_records_cached(sheet, sheet.title)
 
 # Sayfa ayarları
 st.set_page_config(
@@ -818,14 +823,15 @@ with ana_sekme1:
                             st.stop()
 
                     # ----------------------------------------------------
-                    
 
+                    st.cache_data.clear() # 🌟 SİPARİŞ VERİLİNCE HAFIZAYI TEMİZLE Kİ TABLO GÜNCELLENSİN
                     st.success(f"Tebrikler! {yeni_id} nolu {status_mesaj}")
                     st.session_state.liste_onaylandi = False
                     st.session_state.sepet = {}
                     st.session_state.editor_key += 1
                     time.sleep(1.5)
                     st.rerun()
+
                 except Exception as e:
                     st.error(f"Sipariş kaydı sırasında hata oluştu: {e}")
         else:
