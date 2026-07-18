@@ -351,7 +351,7 @@ if st.session_state.get("rol") == "Admin":
                                             msg.attach(MIMEText(f"Siparisiniz onaylandi. Ekli dosyada detaylari bulabilirsiniz."))
     
                                             with open(pdf_yolu, "rb") as f:
-                                            part = MIMEApplication(f.read(), Name=pdf_yolu)
+                                                part = MIMEApplication(f.read(), Name=pdf_yolu)
                                             part['Content-Disposition'] = f'attachment; filename="{pdf_yolu}"'
                                             msg.attach(part)
         
