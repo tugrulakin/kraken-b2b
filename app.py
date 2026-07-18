@@ -87,20 +87,18 @@ def st_zırhlı_detay_goster(detay_df):
 # Hatalı Kütüphane Formatını Ezip Ham Veri Çeken Özel Fonksiyon
 @st.cache_data(ttl=300) # 🌟 VERİLERİ 5 DAKİKA HAFIZAYA ALIR (429 Hatasını Önler)
 def get_records_cached(_sheet, sheet_title):
-    try:
-        raw = _sheet.get_all_values()
-        if len(raw) > 1:
-            headers = raw[0]
-            num_cols = len(headers)
-            records = []
-            for row in raw[1:]:
-                # Satır kısa kaldıysa boşlukla tamamla
-                padded_row = row + [""] * (num_cols - len(row))
-                records.append(dict(zip(headers, padded_row)))
-            return records
-        return []
-    except:
-        return []
+    # DİKKAT: Hataları yutup boş liste kaydeden try-except bloğu kaldırıldı!
+    raw = _sheet.get_all_values()
+    if len(raw) > 1:
+        headers = raw[0]
+        num_cols = len(headers)
+        records = []
+        for row in raw[1:]:
+            # Satır kısa kaldıysa boşlukla tamamla
+            padded_row = row + [""] * (num_cols - len(row))
+            records.append(dict(zip(headers, padded_row)))
+        return records
+    return []
 
 def get_records_raw(sheet):
     # Eski kodlarının hiçbirini değiştirmene gerek kalmaması için köprü görevi görür
