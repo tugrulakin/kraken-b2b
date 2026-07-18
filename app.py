@@ -787,12 +787,18 @@ with ana_sekme1:
                             siparis_detayi = ""
                             for urun_kodu in st.session_state.sepet:
                                 urun_adi = orijinal_df.loc[orijinal_df["Ürün Kodu"] == urun_kodu, "Ürün Adı"].values[0]
+                                # Telegram HTML formatında '&', '<', '>' gibi karakterleri görünce hata verir. Temizliyoruz:
+                                urun_adi = str(urun_adi).replace("&", "ve").replace("<", "").replace(">", "")
                                 siparis_detayi += f"▪️ {urun_adi} ({st.session_state.sepet[urun_kodu]} adet)\n"
                                 
+                            # Müşteri veya Yat isminde de ampersand (&) vs. varsa patlamaması için güvenceye alalım:
+                            guvenli_isim = str(st.session_state.gercek_isim).replace("&", "ve").replace("<", "").replace(">", "")
+                            guvenli_yat = str(st.session_state.secilen_yat).replace("&", "ve").replace("<", "").replace(">", "")
+                            
                             mesaj = (
                                 f"🚨 <b>YENİ SİPARİŞ GELDİ!</b>\n\n"
-                                f"👤 <b>Müşteri:</b> {st.session_state.gercek_isim}\n"
-                                f"🛥️ <b>Yat:</b> {st.session_state.secilen_yat}\n"
+                                f"👤 <b>Müşteri:</b> {guvenli_isim}\n"
+                                f"🛥️ <b>Yat:</b> {guvenli_yat}\n"
                                 f"🆔 <b>Sipariş No:</b> {yeni_id}\n\n"
                                 f"📦 <b>Sipariş İçeriği:</b>\n{siparis_detayi}"
                             )
@@ -805,13 +811,14 @@ with ana_sekme1:
                             
                             if response.status_code != 200:
                                 st.error(f"TELEGRAM GÖNDERİLEMEDİ! Hata Kodu: {response.text}")
-                                st.stop() # Sayfayı dondurur, hatayı yakalarız
+                                st.stop() # Sayfayı dondurur, hatayı okumamızı sağlar
                                 
                         except Exception as e:
                             st.error(f"TELEGRAM KOD HATASI: {str(e)}")
                             st.stop()
 
                     # ----------------------------------------------------
+                    
 
                     st.success(f"Tebrikler! {yeni_id} nolu {status_mesaj}")
                     st.session_state.liste_onaylandi = False
