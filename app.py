@@ -4,6 +4,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
 import time
 import json
+import baglantı
 
 # ==========================================
 # 💎 ZIRHLI MATEMATİK VE FORMATLAMA MOTORU
