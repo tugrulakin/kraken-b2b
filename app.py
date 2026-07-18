@@ -125,9 +125,8 @@ def yat_degisti():
 # ==========================================
 # 🔌 GOOGLE SHEETS BAĞLANTI ALTYAPISI
 # ==========================================
-kapsam = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-kimlik = ServiceAccountCredentials.from_json_keyfile_name("sifre.json", kapsam)
-client = gspread.authorize(kimlik)
+client = baglanti.client
+TABLO_ID = baglanti.TABLO_ID
 
 # ⚠️ BURAYA GOOGLE SHEETS ID'NİZİ YAPIŞTIRIN
 TABLO_ID = "10Cr8YqLpwMXOglQAPz2fP8gSmZR3EkBnpIU-_XSgClM"

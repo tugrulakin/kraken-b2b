@@ -7,14 +7,9 @@ from oauth2client.service_account import ServiceAccountCredentials
 kapsam = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds_dict = json.loads(st.secrets["GSPREAD_JSON"])
 kimlik = ServiceAccountCredentials.from_json_dict(creds_dict, kapsam)
-# ----------------------------------------
 
+# 2. İletişim kanalını (client) açıyoruz
 client = gspread.authorize(kimlik)
 
-# 2. Google E-Tablo dosyamızı açıyoruz
-tablo_linki = "https://docs.google.com/spreadsheets/d/10Cr8YqLpwMXOglQAPz2fP8gSmZR3EkBnpIU-_XSgClM/edit?gid=0#gid=0"
-tablo = client.open_by_url(tablo_linki).sheet1
-
-# 3. Tablodaki verileri çekip ekrana yazdırıyoruz
-# (Web'de olduğumuz için print yerine st.write kullanmak daha iyidir)
-veriler = tablo.get_all_records()
+# 3. app.py dosyasının kullanacağı Tablo ID'sini buraya yazıyoruz
+TABLO_ID = "10Cr8YqLpwMXOglQAPz2fP8gSmZR3EkBnpIU-_XSgClM"
