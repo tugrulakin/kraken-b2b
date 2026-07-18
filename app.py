@@ -746,34 +746,35 @@ with ana_sekme1:
             buton_kolon1, buton_kolon2 = st.columns(2)
             
             with buton_kolon1:
-                gonder_basildi = st.button("🚀 Siparişi Gönder", type="primary", use_container_width=True)
+                # 🌟 ZIRH 1: Butonlara kalıcı 'key' eklendi, tıklamaların yutulması imkansızlaştı!
+                gonder_basildi = st.button("🚀 Siparişi Gönder", type="primary", use_container_width=True, key="btn_gonder_kalici_1")
             with buton_kolon2:
-                taslak_basildi = st.button("💾 Taslak Olarak Kaydet", type="secondary", use_container_width=True)
+                taslak_basildi = st.button("💾 Taslak Olarak Kaydet", type="secondary", use_container_width=True, key="btn_taslak_kalici_1")
                 
             if gonder_basildi or taslak_basildi:
-                with st.spinner("Siparişiniz merkeze iletiliyor, lütfen bekleyin..."): # BUTONA BASILDIĞINI GÖSTERİR
-                    durum_degeri = "Gonderis" if gonder_basildi else "Gonderilmemis"
-                    status_mesaj = "siparişiniz başarıyla merkeze iletildi!" if gonder_basildi else "siparişiniz taslak olarak kaydedildi!"
-                    
-                    siparis_kayit_df = liste_df[[
-                        "Ürün Kodu", "Kategori", "Alt Kategori", "Miktar", "Ürün Adı", 
-                        "Açıklama", "Gizli_Birim_Fiyat", "Saf_KDV"
-                    ]]
-                    detay_json_str = json.dumps(siparis_kayit_df.to_dict(orient="records"), ensure_ascii=False)
-                    
-                    if siparisler_df.empty:
-                        yeni_id = "KRAKEN-1001"
-                    else:
-                        try:
-                            son_id = str(siparisler_df.iloc[-1]["Siparis_ID"])
-                            son_numara = int(son_id.split("-")[1])
-                            yeni_id = f"KRAKEN-{son_numara + 1}"
-                        except:
-                            yeni_id = f"KRAKEN-{1000 + len(siparisler_df) + 1}"
-                            
-                    tarih_str = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M")
-                    
-                    try:
+                with st.spinner("Siparişiniz merkeze iletiliyor, lütfen bekleyin..."): 
+                    try: # 🌟 ZIRH 2: Tüm işlemleri güvenli odaya aldık!
+                        durum_degeri = "Gonderis" if gonder_basildi else "Gonderilmemis"
+                        status_mesaj = "siparişiniz başarıyla merkeze iletildi!" if gonder_basildi else "siparişiniz taslak olarak kaydedildi!"
+                        
+                        siparis_kayit_df = liste_df[[
+                            "Ürün Kodu", "Kategori", "Alt Kategori", "Miktar", "Ürün Adı", 
+                            "Açıklama", "Gizli_Birim_Fiyat", "Saf_KDV"
+                        ]]
+                        detay_json_str = json.dumps(siparis_kayit_df.to_dict(orient="records"), ensure_ascii=False)
+                        
+                        if siparisler_df.empty:
+                            yeni_id = "KRAKEN-1001"
+                        else:
+                            try:
+                                son_id = str(siparisler_df.iloc[-1]["Siparis_ID"])
+                                son_numara = int(son_id.split("-")[1])
+                                yeni_id = f"KRAKEN-{son_numara + 1}"
+                            except:
+                                yeni_id = f"KRAKEN-{1000 + len(siparisler_df) + 1}"
+                                
+                        tarih_str = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M")
+                        
                         tablo_siparisler.append_row([
                             yeni_id, 
                             tarih_str, 
@@ -832,8 +833,8 @@ with ana_sekme1:
                         st.rerun()
 
                     except Exception as e:
-                        st.error(f"🚨 GOOGLE SHEETS SİPARİŞİ KAYDEDEMEDİ! Hata: {e}")
-                        st.info("Eğer hata metninde 'Quota exceeded' (Limit aşıldı) yazıyorsa, lütfen 1 dakika bekleyip butona tekrar basın.")
+                        st.error(f"🚨 SİSTEM HATASI! İşlem tamamlanamadı: {e}")
+                        st.info("Eğer hata 'Quota exceeded' ise lütfen 1 dakika bekleyin. Aksi takdirde sayfayı yenileyip tekrar deneyin.")
                         st.stop() # HATA VARSA SAYFAYI ZORLA DONDURUR
         else:
             st.warning("Listenizde miktar girişi yapılmış herhangi bir ürün bulunamadı.")
