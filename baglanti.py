@@ -6,7 +6,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 # 1. Google'a kimliğimizi (VIP Kartını) gösteriyoruz
 kapsam = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds_dict = json.loads(st.secrets["GSPREAD_JSON"])
-kimlik = ServiceAccountCredentials.from_json_dict(creds_dict, kapsam)
+kimlik = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, kapsam)
 
 # 2. İletişim kanalını (client) açıyoruz
 client = gspread.authorize(kimlik)
