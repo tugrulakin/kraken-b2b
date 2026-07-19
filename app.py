@@ -958,7 +958,10 @@ with ana_sekme2:
                                         tablo_siparisler.delete_rows(idx + 2)
                                         st.cache_data.clear() # 🌟 SİLME İŞLEMİNDEN SONRA DA HAFIZAYI SIFIRLADIK
                                         st.rerun()
-                            
+
+                    except Exception as e:
+                        st.error(f"Detaylar yüklenemedi: {e}")
+                        
         with durum_tab2:
             gonderilenler = kullanici_siparisleri[kullanici_siparisleri["Durum"] == "Gonderis"]
             if gonderilenler.empty:
