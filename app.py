@@ -890,16 +890,55 @@ with ana_sekme2:
                         # Butonlar
                         c1, c2, c3 = st.columns(3)
                         with c1:
-                            if st.button("🚀 Gönder", type="primary", use_container_width=True):
-                                raw_sip = tablo_siparisler.get_all_values()
-                                headers = raw_sip[0]
-                                durum_col_idx = headers.index("Durum") + 1 
-                                for idx, row in enumerate(raw_sip[1:]):
-                                    if row[headers.index("Siparis_ID")] == secili_satir["Siparis_ID"]:
-                                        tablo_siparisler.update_cell(idx + 2, durum_col_idx, "Gonderis")
-                                        st.rerun()
+                            if st.button("🚀 Gönder", type="primary", use_container_width=True, key=f"tslk_gndr_{secili_satir['Siparis_ID']}"):
+                                with st.spinner("İletiliyor..."):
+                                    try:
+                                        # 1. Sheets'i Güncelle
+                                        raw_sip = tablo_siparisler.get_all_values()
+                                        headers = raw_sip[0]
+                                        durum_col_idx = headers.index("Durum") + 1 
+                                        for idx, row in enumerate(raw_sip[1:]):
+                                            if row[headers.index("Siparis_ID")] == secili_satir["Siparis_ID"]:
+                                                tablo_siparisler.update_cell(idx + 2, durum_col_idx, "Gonderis")
+                                        
+                                        # 2. Telegram'a Mesaj At
+                                        import requests
+                                        telegram_token = "8999770908:AAEGuzHWxTjeuos_0MwpCa5GTuJGhoG5xCw"
+                                        telegram_chat_id = "-1004481254642"
+                                        
+                                        siparis_detayi = ""
+                                        for urun in detay_dict:
+                                            urun_adi = str(urun.get("Ürün Adı", "Bilinmeyen Ürün")).replace("&", "ve").replace("<", "").replace(">", "")
+                                            siparis_detayi += f"▪️ {urun_adi} ({urun.get('Miktar', 0)} adet)\n"
+                                        
+                                        mesaj = (
+                                            f"🚨 <b>YENİ SİPARİŞ GELDİ!</b>\n\n"
+                                            f"👤 <b>Müşteri:</b> {str(st.session_state.gercek_isim).replace('&', 've')}\n"
+                                            f"🛥️ <b>Yat:</b> {str(secili_satir['Yat_Adi']).replace('&', 've')}\n"
+                                            f"🆔 <b>Sipariş No:</b> {secili_satir['Siparis_ID']}\n\n"
+                                            f"📦 <b>Sipariş İçeriği:</b>\n{siparis_detayi}"
+                                        )
+                                        
+                                        response = requests.post(
+                                            f"https://api.telegram.org/bot{telegram_token}/sendMessage", 
+                                            data={"chat_id": telegram_chat_id, "text": mesaj, "parse_mode": "HTML"},
+                                            timeout=10
+                                        )
+                                        
+                                        if response.status_code == 200:
+                                            st.cache_data.clear() # 🌟 HAFIZAYI SIFIRLADIK, EKRAN ANINDA GÜNCELLENECEK!
+                                            st.success("Sipariş başarıyla gönderildi!")
+                                            time.sleep(1)
+                                            st.rerun()
+                                        else:
+                                            st.error(f"Telegram Hatası: {response.text}")
+                                            st.stop()
+                                    except Exception as e:
+                                        st.error(f"Hata oluştu: {e}")
+                                        st.stop()
+
                         with c2:
-                            if st.button("✏️ Düzenle", use_container_width=True):
+                            if st.button("✏️ Düzenle", use_container_width=True, key=f"tslk_duzenle_{secili_satir['Siparis_ID']}"):
                                 st.session_state.sepet = {urun["Ürün Kodu"]: int(urun["Miktar"]) for urun in detay_dict}
                                 st.session_state.liste_onaylandi = True
                                 # Eski taslağı sil
@@ -908,16 +947,17 @@ with ana_sekme2:
                                     if row_val[0] == secili_satir["Siparis_ID"]:
                                         tablo_siparisler.delete_rows(idx + 2)
                                         break
+                                st.cache_data.clear() # 🌟 DÜZENLEMEDEN SONRA DA HAFIZAYI SIFIRLADIK
                                 st.rerun()
+
                         with c3:
-                            if st.button("🗑️ Sil", type="secondary", use_container_width=True):
+                            if st.button("🗑️ Sil", type="secondary", use_container_width=True, key=f"tslk_sil_{secili_satir['Siparis_ID']}"):
                                 raw_sip = tablo_siparisler.get_all_values()
                                 for idx, row_val in enumerate(raw_sip[1:]):
                                     if row_val[0] == secili_satir["Siparis_ID"]:
                                         tablo_siparisler.delete_rows(idx + 2)
+                                        st.cache_data.clear() # 🌟 SİLME İŞLEMİNDEN SONRA DA HAFIZAYI SIFIRLADIK
                                         st.rerun()
-                    except Exception as e:
-                        st.error(f"Detaylar yüklenemedi: {e}")
                             
         with durum_tab2:
             gonderilenler = kullanici_siparisleri[kullanici_siparisleri["Durum"] == "Gonderis"]
